@@ -5,8 +5,6 @@ import { Footer } from './layouts/navigation-bars/Footer'
 import { NavigationBar } from './layouts/navigation-bars/NavigationBar'
 
 function App() {
- 
-
   return (
     <>
         <NavigationBar/>
