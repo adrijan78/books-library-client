@@ -23,4 +23,36 @@ export const bookService = {
     const data: BookResponse = await response.json();
     return data;
   },
+
+  async searchBooksByTitle(
+    title: string,
+    pageNo: number,
+    pageSize: number,
+  ): Promise<BookResponse> {
+    const response = await fetch(
+      `${BASE_URL}/books/search/title?title=${encodeURIComponent(title)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to search books by title");
+    }
+
+    return response.json();
+  },
+
+  async searchBooksByCategory(
+    category: string,
+    pageNo: number,
+    pageSize: number,
+  ): Promise<BookResponse> {
+    const response = await fetch(
+      `${BASE_URL}/books/search/category?category=${encodeURIComponent(category)}&pageNo=${pageNo}&pageSize=${pageSize}`,
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to search books by category");
+    }
+
+    return response.json();
+  },
 };

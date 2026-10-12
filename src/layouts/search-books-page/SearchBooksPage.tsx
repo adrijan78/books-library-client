@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import type { BookModel } from "../../models/BookModel";
 import { SearchBook } from "./components/SearchBook";
 import { bookService } from "../../services/BookService";
@@ -32,6 +32,13 @@ import { Pagination } from "../../components/Pagination";
 export const SearchBooksPage = () => {
 
   const BOOKS_PER_PAGE = 5;
+  const CATEGORIES: { label: string; value: string }[] = [
+    {label:"ALL", value:"all"},
+    {label:"FRONT END", value:"FE"},
+    {label:"BACK END", value:"BE"},
+    {label:"DATA", value:"data"},
+    {label:"DEVOPS", value:"devops"},
+  ] as const;
 
   const [books,setBooks]= useState<BookModel[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -40,12 +47,27 @@ export const SearchBooksPage = () => {
   const [totalBooks,setTotalBooks] = useState<number>(0);
   const [totalPages,setTotalPages]= useState<number>(0);
 
+
+  const [searchInput, setSearchInput] = useState<string>("");
+  const[searchTerm,setSearchTerm] = useState<string>("");
+
+  const[selectedCategory,setSelectedCategory] = useState<string>("All");
+
   useEffect(()=>{
     const fetchBooks = async()=>{
 
       try {
         const pageNo = currentPage - 1;
-        const data = await bookService.getBooks(pageNo, 5);
+
+        let data;
+
+        if(searchTerm){
+          data = await bookService.searchBooksByTitle(searchTerm,pageNo,BOOKS_PER_PAGE);
+        }else if(selectedCategory !== "all") {
+          data = await bookService.searchBooksByCategory(selectedCategory,pageNo,BOOKS_PER_PAGE);
+        } else {
+          data = await bookService.getBooks(pageNo, 5);
+        }
         setBooks(data.content);
         setTotalBooks(data.page.totalElements);
         setTotalPages(data.page.totalPages);
@@ -59,7 +81,27 @@ export const SearchBooksPage = () => {
 
     };
     fetchBooks();
-  },[currentPage]);
+  },[currentPage,searchTerm,selectedCategory]);
+
+
+  const handleSeach = useCallback(()=>{
+    setCurrentPage(1);
+    setSearchTerm(searchInput);
+    setSelectedCategory("all");
+  },[setCurrentPage,searchInput]);
+
+  const handleInputKeyDown = useCallback((event: React.KeyboardEvent<HTMLInputElement>)=>{
+    if(event.key === "Enter"){
+      handleSeach();
+    }
+  },[handleSeach]);
+
+  const handleCategorySelect = useCallback((category: string)=>{
+    setCurrentPage(1);
+    setSelectedCategory(category);
+    setSearchTerm("");
+    setSearchInput("");
+  },[setCurrentPage]);
 
   if(isLoading){
     return <SpinnerLoading/>
@@ -86,8 +128,13 @@ export const SearchBooksPage = () => {
                   type="search"
                   placeholder="Search"
                   aria-labelledby="Search"
+                  value={searchInput}
+                  onChange={(e) => setSearchInput(e.target.value)}
+                  onKeyDown={handleInputKeyDown}
                 />
-                <button className="btn btn-outline-success">Search</button>
+                <button className="btn btn-outline-success" onClick={handleSeach}>
+                  Search
+                </button>
               </div>
             </div>
 
@@ -100,40 +147,27 @@ export const SearchBooksPage = () => {
                   data-bs-toggle="dropdown"
                   aria-expanded="false"
                 >
-                  Category
+                  {selectedCategory}
                 </button>
 
                 <ul
                   className="dropdown-menu"
                   aria-labelledby="dropdownMenuButton1"
                 >
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      All
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Front End
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Back End
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      Data
-                    </a>
-                  </li>
-                  <li>
-                    <a className="dropdown-item" href="#">
-                      DevOps
-                    </a>
-                  </li>
+                  {CATEGORIES.map((category) => (
+                    <li key={category.value}>
+                      <a
+                        className="dropdown-item"
+                        href="#"
+                        onClick={() => handleCategorySelect(category.value)}
+                      >
+                        {category.label}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
+            
             </div>
           </div>
 
