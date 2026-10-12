@@ -51,7 +51,7 @@ export const SearchBooksPage = () => {
   const [searchInput, setSearchInput] = useState<string>("");
   const[searchTerm,setSearchTerm] = useState<string>("");
 
-  const[selectedCategory,setSelectedCategory] = useState<string>("All");
+  const[selectedCategory,setSelectedCategory] = useState<string>("all");
 
   useEffect(()=>{
     const fetchBooks = async()=>{

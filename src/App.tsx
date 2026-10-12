@@ -1,3 +1,4 @@
+import { Route, Routes } from 'react-router-dom'
 import './App.css'
 import { HomePage } from './layouts/home-page/HomePage'
 import { Footer } from './layouts/navigation-bars/Footer'
@@ -9,8 +10,10 @@ function App() {
   return (
     <>
         <NavigationBar/>
-        {/* <HomePage/>   */}
-        <SearchBooksPage/>
+        <Routes>
+          <Route path="/" element={<HomePage/>}/>
+          <Route path="/search" element={<SearchBooksPage/>}/>
+        </Routes>
         <Footer/>       
     </>
   )
