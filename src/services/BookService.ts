@@ -55,4 +55,14 @@ export const bookService = {
 
     return response.json();
   },
+
+  async getBookById(id: string): Promise<BookModel> {
+    const response = await fetch(`${BASE_URL}/books/${id}`);
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch book by ID");
+    }
+
+    return response.json();
+  },
 };
