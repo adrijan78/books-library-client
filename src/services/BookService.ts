@@ -1,9 +1,18 @@
 import type { BookModel } from "../models/BookModel";
+import type { ReviewModel } from "../models/ReviewModel";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 interface BookResponse {
   content: BookModel[];
+  page: {
+    totalElements: number;
+    totalPages: number;
+  };
+}
+
+interface ReviewResponse {
+  content: ReviewModel[];
   page: {
     totalElements: number;
     totalPages: number;
@@ -61,6 +70,22 @@ export const bookService = {
 
     if (!response.ok) {
       throw new Error("Failed to fetch book by ID");
+    }
+
+    return response.json();
+  },
+
+  async getBookReviewsById(
+    bookId: string,
+    pageNo: number = 0,
+    pageSize: number = 3,
+  ): Promise<ReviewResponse> {
+    const response = await fetch(
+      `${BASE_URL}/reviews/book/${bookId}?pageNo=${pageNo}&pageSize=${pageSize}`,
+    );
+
+    if (!response.ok) {
+      throw new Error("Failed to fetch reviews for the book");
     }
 
     return response.json();

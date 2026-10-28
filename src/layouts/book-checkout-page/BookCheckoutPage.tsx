@@ -3,10 +3,14 @@ import type { BookModel } from "../../models/BookModel";
 import { bookService } from "../../services/BookService";
 import { SpinnerLoading } from "../../components/SpinnerLoading";
 import { CheckoutBox } from "./components/CheckoutBox";
+import type { ReviewModel } from "../../models/ReviewModel";
+import { LatestReviews } from "./components/LatestReviews";
 
 export const BookCheckoutPage = () => {
 
   const bookId = window.location.pathname.split("/")[2];
+
+  const [reviews,setReviews]= useState<ReviewModel[]>([]); 
 
   const [book, setBook] = useState<BookModel | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -15,9 +19,17 @@ export const BookCheckoutPage = () => {
   useEffect(()=>{
     const fetchBook = async () => {
       try {
-        const data = await bookService.getBookById(bookId);
-        setIsLoading(false);
-        setBook(data);
+       const [bookData,reviewData]= await Promise.all([
+        bookService.getBookById(bookId),
+        bookService.getBookReviewsById(bookId)
+       ]);
+
+       setBook(bookData);
+       setReviews(reviewData.content);
+
+       setIsLoading(false)
+
+
       } catch (error) {
         setIsLoading(false);
         setHttpError(error instanceof Error ? error.message : "An unknown error occurred");
@@ -63,6 +75,7 @@ export const BookCheckoutPage = () => {
 
         </div>
         <hr />
+        <LatestReviews reviews={reviews} bookId={book?.id}/>
       </div>
       {/* Mobile View */}
       <div className="container d-lg-none mt-5">
@@ -83,6 +96,7 @@ export const BookCheckoutPage = () => {
         </div>
         <CheckoutBox book={book!} />
         <hr />
+        <LatestReviews reviews={reviews} bookId={book?.id}/>
       </div>
     </>
   );
