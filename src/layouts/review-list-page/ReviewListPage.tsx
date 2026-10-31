@@ -5,12 +5,15 @@ import { bookService } from "../../services/BookService";
 import { SpinnerLoading } from "../../components/SpinnerLoading";
 import { Review } from "../../components/Review";
 import { Pagination } from "../../components/Pagination";
+import { useAuth } from "../../auth/AuthContext";
+import { ReviewForm } from "../../components/ReviewForm";
 
 export const ReviewListPage = () => {
 
   const REVIEWS_PER_PAGE=5;
 
   const {bookId} = useParams<{bookId:string}>();
+  const {isAuthenticated, user,login}= useAuth();
   const [reviews,setReviews]= useState<ReviewModel[]>([]);
 
   const [isLoading, setIsLoading] = useState<boolean>(true);
@@ -18,6 +21,9 @@ export const ReviewListPage = () => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalReviews,setTotalReviews] = useState<number>(0);
   const [totalPages,setTotalPages]= useState<number>(0);
+  const [showReviewForm,setShowReviewForm]= useState<boolean>(false);
+  const [hasUserReviewed,setHasUserReviewed]= useState<boolean>(false);
+  const [refreshTrigger,setRefreshTrigger]= useState<number>(0);
 
 
   useEffect(()=>{
@@ -38,6 +44,15 @@ export const ReviewListPage = () => {
         setReviews(reviewsData.content);
         setTotalReviews(reviewsData.page.totalElements);
         setTotalPages(reviewsData.page.totalPages);
+
+        if(isAuthenticated && user?.email){
+          const userReview = reviewsData.content.find(
+            (review)=> review.userEmail === user.email
+          );
+
+          setHasUserReviewed(!!userReview)
+        }
+
         setIsLoading(false);
         window.scrollTo(0,0);
 
@@ -53,8 +68,25 @@ export const ReviewListPage = () => {
 
     fetchData();
 
-  },[bookId,currentPage])
+  },[bookId,currentPage,isAuthenticated,user?.email,refreshTrigger])
   
+
+  const handleReviewSubmitted=()=>{
+    setShowReviewForm(false);
+    setHasUserReviewed(true);
+    setCurrentPage(1);
+    setRefreshTrigger((prev)=> prev+1)
+  }
+
+  const handleShowReivewForm = ()=>{
+    setShowReviewForm(true);
+  }
+
+  const handleCancelReview=()=>{
+    setShowReviewForm(false);
+  }
+
+
 
    if(isLoading){
       return <SpinnerLoading/>
@@ -83,6 +115,42 @@ export const ReviewListPage = () => {
       <div className="row">
         <div className="col-12">
           <h3>All Reviews {totalReviews}</h3>
+
+          {isAuthenticated && !hasUserReviewed && !showReviewForm && (
+            <div className="mb-4">
+              <button className="btn btn-primary" onClick={handleShowReivewForm}> Leave a review</button>
+            </div>
+          )}
+
+          {!isAuthenticated && (
+            <div className="alert alert-warning mb-4">
+              <button className="btn btn-link p-0 text-decoration-none"
+               onClick={login}
+               style={{fontSize:"inherit"}}>
+                Sign in to leave a review
+               </button>
+            </div>
+          )}
+
+          {isAuthenticated && hasUserReviewed &&
+          (
+
+            <div className="alert alert-info mb-4">
+              You have already reviewed this book
+            </div>
+
+          )}
+
+
+          {showReviewForm && bookId && (
+            <ReviewForm
+                bookId={bookId}
+                onReviewSubmitted={handleReviewSubmitted}
+                onCancel={handleCancelReview}
+
+            />
+          )}
+
 
           {reviews.length >0 ?(
 
